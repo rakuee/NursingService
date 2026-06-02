@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Tomar turno</h1>
+<form id="join-form">
+    <input  type="text" name="name" placeholder="Nombre completo" required>
+    <select name="person_type">
+        <option value="student">Estudiante</option>
+        <option value="worker">Trabajador</option>
+    </select>
+    <button type="submit">Entrar a la fila</button>
+</form>
+<p id="result"></p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('join-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: f.name.value, person_type: f.person_type.value }),
+    });
+    const data = await res.json();
+    document.getElementById('result').textContent = `Tu turno fue asignado. ID: ${data.id}`;
+});
+</script>
+{% endblock %}

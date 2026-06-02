@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Horas pico de espera</h1>
+<canvas id="chart"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/stats/peak-hours')
+    .then(r => r.json())
+    .then(data => {
+        new Chart(document.getElementById('chart'), {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.hour),
+                datasets: [{
+                    label: 'Espera promedio (min)',
+                    data: data.map(d => d.avg_wait_minutes),
+                }]
+            }
+        });
+    });
+</script>
+{% endblock %}
