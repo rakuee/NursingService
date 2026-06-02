@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Tomar turno{% endblock %}
+{% block title %}Tomar turno — Enfermería Campus{% endblock %}
 
 {% block content %}
 <h1>Tomar turno</h1>
@@ -14,7 +14,12 @@
     <button class="primary" onclick="joinQueue()">Entrar a la fila</button>
 </div>
 
-<div id="result" style="display:none"></div>
+<div id="result" class="alert"></div>
+
+<div class="nav-buttons">
+    <a href="/"><button class="primary" style="background:#555">← Volver al inicio</button></a>
+    <a href="/staff"><button class="primary" style="background:#2d5a3d">Ver fila →</button></a>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -22,7 +27,11 @@
 async function joinQueue() {
     const name        = document.getElementById('name').value.trim();
     const person_type = document.getElementById('person_type').value;
-    if (!name) return showAlert('result', 'Escribe tu nombre completo.', 'error');
+
+    if (!name) {
+        showAlert('Escribe tu nombre completo.', 'error');
+        return;
+    }
 
     const res  = await fetch('/api/users', {
         method: 'POST',
@@ -32,20 +41,18 @@ async function joinQueue() {
     const data = await res.json();
 
     if (res.ok) {
-        showAlert('result',
-            `✓ Turno tomado. Bienvenido/a <strong>${data.name}</strong>. Tu ID es <strong>#${data.id}</strong>.`,
-            'success'
-        );
+        showAlert(`✓ Turno tomado. Bienvenido/a <strong>${data.name}</strong>. Tu ID es <strong>#${data.id}</strong>.`, 'success');
+        document.getElementById('name').value = '';
     } else {
-        showAlert('result', 'Error al registrarse. Intenta de nuevo.', 'error');
+        showAlert('Error al registrarse. Intenta de nuevo.', 'error');
     }
 }
 
-function showAlert(id, msg, type) {
-    const el = document.getElementById(id);
-    el.className = `alert ${type}`;
-    el.innerHTML = msg;
-    el.style.display = 'block';
+function showAlert(msg, type) {
+    const el = document.getElementById('result');
+    el.className      = `alert ${type}`;
+    el.innerHTML      = msg;
+    el.style.display  = 'block';
 }
 </script>
 {% endblock %}

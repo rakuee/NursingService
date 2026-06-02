@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Estadísticas{% endblock %}
+{% block title %}Estadísticas — Enfermería Campus{% endblock %}
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -7,13 +7,18 @@
 
 {% block content %}
 <h1>Horas pico</h1>
-<p class="subtitle">Tiempo promedio de espera por hora del día.</p>
+<p class="subtitle">Tiempo promedio de espera por hora del día, basado en visitas completadas.</p>
 
 <div class="card">
     <canvas id="chart" height="120"></canvas>
-    <p id="no-data" style="text-align:center;color:#888;display:none;padding:40px 0">
+    <p id="no-data" style="text-align:center; color:#888; display:none; padding:40px 0;">
         Aún no hay datos. Atiende algunos pacientes primero.
     </p>
+</div>
+
+<div class="nav-buttons">
+    <a href="/"><button class="primary" style="background:#555">← Inicio</button></a>
+    <a href="/staff"><button class="primary" style="background:#2d5a3d">Atender pacientes</button></a>
 </div>
 {% endblock %}
 
@@ -24,8 +29,8 @@ async function loadChart() {
     const data = await res.json();
 
     if (!data.length) {
-        document.getElementById('chart').style.display    = 'none';
-        document.getElementById('no-data').style.display  = 'block';
+        document.getElementById('chart').style.display   = 'none';
+        document.getElementById('no-data').style.display = 'block';
         return;
     }
 
@@ -43,7 +48,14 @@ async function loadChart() {
             }]
         },
         options: {
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.parsed.y} minutos`
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,

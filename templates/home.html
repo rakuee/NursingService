@@ -1,82 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Enfermería Campus</title>
-    <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-        input, select, button { display: block; width: 100%; margin: 8px 0; padding: 8px; font-size: 1rem; }
-        button { background: #2563eb; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        #result { margin-top: 20px; padding: 12px; background: #f0fdf4; border-radius: 4px; display: none; }
-        #queue-list { margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 8px; border: 1px solid #e5e7eb; text-align: left; }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Inicio — Enfermería Campus{% endblock %}
 
-    <h1>Enfermería — Fila Virtual</h1>
+{% block content %}
+<h1>Enfermería Campus</h1>
+<p class="subtitle">Bienvenido/a. Toma tu turno o consulta la fila actual.</p>
 
-    <!-- Join form -->
-    <h2>Tomar turno</h2>
-    <input  type="text" id="name" placeholder="Nombre completo">
-    <select id="role_type">
-        <option value="student">Estudiante</option>
-        <option value="worker">Trabajador</option>
-    </select>
-    <button onclick="joinQueue()">Entrar a la fila</button>
+<div class="nav-buttons">
+    <a href="/form"><button class="primary">+ Tomar turno</button></a>
+    <a href="/staff"><button class="primary" style="background:#2d5a3d">Atender pacientes</button></a>
+    <a href="/stats"><button class="primary" style="background:#4a6741">Ver estadísticas</button></a>
+</div>
 
-    <div id="result">
-        <strong>¡Turno tomado!</strong>
-        <p>Nombre: <span id="res-name"></span></p>
-        <p>Posición en fila: <span id="res-position"></span></p>
-    </div>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:36px;">
+    <h2 style="margin:0">Fila actual</h2>
+    <button class="small" onclick="loadQueue()">↻ Actualizar</button>
+</div>
 
-    <!-- Current queue -->
-    <div id="queue-list">
-        <h2>Fila actual <button onclick="loadQueue()" style="width:auto;padding:4px 10px;font-size:.85rem">Actualizar</button></h2>
-        <table>
-            <thead><tr><th>#</th><th>Nombre</th><th>Tipo</th><th>Esperando desde</th></tr></thead>
-            <tbody id="queue-body"></tbody>
-        </table>
-    </div>
+<div class="card" style="margin-top:12px; padding:0; overflow:hidden;">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Esperando desde</th>
+            </tr>
+        </thead>
+        <tbody id="queue-body">
+            <tr><td colspan="4" style="color:#888; text-align:center; padding:24px">Cargando...</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
 
-    <script>
-        async function joinQueue() {
-            const name = document.getElementById('name').value.trim();
-            const role_type = document.getElementById('role_type').value;
-            if (!name) return alert('Escribe tu nombre.');
+{% block scripts %}
+<script>
+async function loadQueue() {
+    const res  = await fetch('/api/queue');
+    const data = await res.json();
+    const body = document.getElementById('queue-body');
 
-            const res  = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, role_type }),
-            });
-            const data = await res.json();
+    if (!data.length) {
+        body.innerHTML = '<tr><td colspan="4" style="color:#888;text-align:center;padding:24px">La fila está vacía.</td></tr>';
+        return;
+    }
 
-            document.getElementById('res-name').textContent     = data.name;
-            document.getElementById('res-position').textContent = data.id;
-            document.getElementById('result').style.display     = 'block';
-            loadQueue();
-        }
+    body.innerHTML = data.map((e, i) => `
+        <tr>
+            <td><strong>${i + 1}</strong></td>
+            <td>${e.user_name}</td>
+            <td><span class="badge ${e.person_type}">${e.person_type === 'student' ? 'Estudiante' : 'Trabajador'}</span></td>
+            <td style="color:#888">${new Date(e.joined_at).toLocaleTimeString()}</td>
+        </tr>
+    `).join('');
+}
 
-        async function loadQueue() {
-            const res  = await fetch('/api/queue');
-            const data = await res.json();
-            const body = document.getElementById('queue-body');
-            body.innerHTML = data.length
-                ? data.map((e, i) => `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${e.user_name}</td>
-                        <td>${e.user_type ?? '—'}</td>
-                        <td>${new Date(e.joined_at).toLocaleTimeString()}</td>
-                    </tr>`).join('')
-                : '<tr><td colspan="4">La fila está vacía.</td></tr>';
-        }
-
-        loadQueue();
-    </script>
-
-</body>
-</html>
+loadQueue();
+</script>
+{% endblock %}

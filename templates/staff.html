@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Atender pacientes{% endblock %}
+{% block title %}Atender pacientes — Enfermería Campus{% endblock %}
 
 {% block content %}
-<h1>Fila actual</h1>
-<p class="subtitle">Pacientes esperando ser atendidos.</p>
+<h1>Atender pacientes</h1>
+<p class="subtitle">Pacientes esperando ser atendidos. Pulsa "Atender" para llamar al siguiente.</p>
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
     <h2 style="margin:0">En espera</h2>
@@ -14,7 +14,12 @@
     <p style="color:#888">Cargando...</p>
 </div>
 
-<div id="attend-result"></div>
+<div id="attend-result" class="alert"></div>
+
+<div class="nav-buttons">
+    <a href="/"><button class="primary" style="background:#555">← Inicio</button></a>
+    <a href="/stats"><button class="primary" style="background:#4a6741">Ver estadísticas →</button></a>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -25,18 +30,20 @@ async function loadQueue() {
     const el   = document.getElementById('queue-container');
 
     if (!data.length) {
-        el.innerHTML = '<div class="card" style="color:#888;text-align:center">La fila está vacía.</div>';
+        el.innerHTML = '<div class="card" style="color:#888;text-align:center;padding:24px">La fila está vacía.</div>';
         return;
     }
 
     el.innerHTML = data.map((e, i) => `
-        <div class="card" style="display:flex;align-items:center;gap:16px">
-            <span style="font-size:1.4rem;font-weight:bold;color:#c8d8c8;min-width:28px">${i + 1}</span>
+        <div class="card" style="display:flex; align-items:center; gap:16px;">
+            <span style="font-size:1.6rem; font-weight:bold; color:#c8d8c8; min-width:32px;">${i + 1}</span>
             <div style="flex:1">
                 <strong>${e.user_name}</strong>
-                <span class="badge ${e.person_type}" style="margin-left:8px">${e.person_type}</span>
-                <div style="font-size:0.82rem;color:#888;margin-top:3px">
-                    Desde las ${new Date(e.joined_at).toLocaleTimeString()}
+                <span class="badge ${e.person_type}" style="margin-left:8px">
+                    ${e.person_type === 'student' ? 'Estudiante' : 'Trabajador'}
+                </span>
+                <div style="font-size:0.82rem; color:#888; margin-top:4px;">
+                    En espera desde las ${new Date(e.joined_at).toLocaleTimeString()}
                 </div>
             </div>
             <button class="small" onclick="attend(${e.user_id})">Atender</button>
@@ -54,14 +61,16 @@ async function attend(user_id) {
     const el   = document.getElementById('attend-result');
 
     if (res.ok) {
-        el.className = 'alert success';
-        el.textContent = `✓ ${data.user_name} fue atendido/a.`;
+        el.className     = 'alert success';
+        el.textContent   = `✓ ${data.user_name} fue atendido/a.`;
+        el.style.display = 'block';
         loadQueue();
     } else {
-        el.className = 'alert error';
-        el.textContent = 'Error al atender. Intenta de nuevo.';
+        el.className     = 'alert error';
+        el.textContent   = 'Error al atender. Intenta de nuevo.';
+        el.style.display = 'block';
     }
-    el.style.display = 'block';
+
     setTimeout(() => el.style.display = 'none', 3000);
 }
 
