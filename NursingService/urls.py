@@ -20,6 +20,9 @@ from nursery import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('nursery.urls')),
     path('', views.home, name='home'),
+    path('form/', views.form, name='form'),
+    path('staff/', views.staff, name='staff'),
+    path('stats/', views.stats, name='stats'),
+    path('api/', include('nursery.urls'))
 ]

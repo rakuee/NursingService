@@ -1,29 +1,51 @@
 {% extends "base.html" %}
+{% block title %}Tomar turno{% endblock %}
+
 {% block content %}
 <h1>Tomar turno</h1>
-<form id="join-form">
-    <input  type="text" name="name" placeholder="Nombre completo" required>
-    <select name="person_type">
+<p class="subtitle">Regístrate para unirte a la fila de enfermería.</p>
+
+<div class="card">
+    <input  type="text" id="name" placeholder="Nombre completo">
+    <select id="person_type">
         <option value="student">Estudiante</option>
         <option value="worker">Trabajador</option>
     </select>
-    <button type="submit">Entrar a la fila</button>
-</form>
-<p id="result"></p>
+    <button class="primary" onclick="joinQueue()">Entrar a la fila</button>
+</div>
+
+<div id="result" style="display:none"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.getElementById('join-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    const res = await fetch('/api/users', {
+async function joinQueue() {
+    const name        = document.getElementById('name').value.trim();
+    const person_type = document.getElementById('person_type').value;
+    if (!name) return showAlert('result', 'Escribe tu nombre completo.', 'error');
+
+    const res  = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: f.name.value, person_type: f.person_type.value }),
+        body: JSON.stringify({ name, person_type }),
     });
     const data = await res.json();
-    document.getElementById('result').textContent = `Tu turno fue asignado. ID: ${data.id}`;
-});
+
+    if (res.ok) {
+        showAlert('result',
+            `✓ Turno tomado. Bienvenido/a <strong>${data.name}</strong>. Tu ID es <strong>#${data.id}</strong>.`,
+            'success'
+        );
+    } else {
+        showAlert('result', 'Error al registrarse. Intenta de nuevo.', 'error');
+    }
+}
+
+function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.className = `alert ${type}`;
+    el.innerHTML = msg;
+    el.style.display = 'block';
+}
 </script>
 {% endblock %}

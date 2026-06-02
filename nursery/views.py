@@ -13,6 +13,15 @@ from .serializers import UserSerializer, QueueEntrySerializer, LogSerializer
 def home(request):
     return render(request, 'home.html')
 
+def form(request):
+    return render(request, 'form.html')
+
+def staff(request):
+    return render(request, 'staff.html')
+
+def stats(request):
+    return render(request, 'stats.html')
+
 # POST /api/users/
 @api_view(['POST'])
 def create_user(request):

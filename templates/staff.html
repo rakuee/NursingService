@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Atender pacientes{% endblock %}
+
+{% block content %}
+<h1>Fila actual</h1>
+<p class="subtitle">Pacientes esperando ser atendidos.</p>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 style="margin:0">En espera</h2>
+    <button class="small" onclick="loadQueue()">↻ Actualizar</button>
+</div>
+
+<div id="queue-container">
+    <p style="color:#888">Cargando...</p>
+</div>
+
+<div id="attend-result"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadQueue() {
+    const res  = await fetch('/api/queue');
+    const data = await res.json();
+    const el   = document.getElementById('queue-container');
+
+    if (!data.length) {
+        el.innerHTML = '<div class="card" style="color:#888;text-align:center">La fila está vacía.</div>';
+        return;
+    }
+
+    el.innerHTML = data.map((e, i) => `
+        <div class="card" style="display:flex;align-items:center;gap:16px">
+            <span style="font-size:1.4rem;font-weight:bold;color:#c8d8c8;min-width:28px">${i + 1}</span>
+            <div style="flex:1">
+                <strong>${e.user_name}</strong>
+                <span class="badge ${e.person_type}" style="margin-left:8px">${e.person_type}</span>
+                <div style="font-size:0.82rem;color:#888;margin-top:3px">
+                    Desde las ${new Date(e.joined_at).toLocaleTimeString()}
+                </div>
+            </div>
+            <button class="small" onclick="attend(${e.user_id})">Atender</button>
+        </div>
+    `).join('');
+}
+
+async function attend(user_id) {
+    const res  = await fetch('/api/queue/attend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id }),
+    });
+    const data = await res.json();
+    const el   = document.getElementById('attend-result');
+
+    if (res.ok) {
+        el.className = 'alert success';
+        el.textContent = `✓ ${data.user_name} fue atendido/a.`;
+        loadQueue();
+    } else {
+        el.className = 'alert error';
+        el.textContent = 'Error al atender. Intenta de nuevo.';
+    }
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3000);
+}
+
+loadQueue();
+</script>
+{% endblock %}

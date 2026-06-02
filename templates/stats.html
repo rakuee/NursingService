@@ -1,28 +1,63 @@
 {% extends "base.html" %}
+{% block title %}Estadísticas{% endblock %}
+
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
-<h1>Horas pico de espera</h1>
-<canvas id="chart"></canvas>
+<h1>Horas pico</h1>
+<p class="subtitle">Tiempo promedio de espera por hora del día.</p>
+
+<div class="card">
+    <canvas id="chart" height="120"></canvas>
+    <p id="no-data" style="text-align:center;color:#888;display:none;padding:40px 0">
+        Aún no hay datos. Atiende algunos pacientes primero.
+    </p>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-fetch('/api/stats/peak-hours')
-    .then(r => r.json())
-    .then(data => {
-        new Chart(document.getElementById('chart'), {
-            type: 'bar',
-            data: {
-                labels: data.map(d => d.hour),
-                datasets: [{
-                    label: 'Espera promedio (min)',
-                    data: data.map(d => d.avg_wait_minutes),
-                }]
+async function loadChart() {
+    const res  = await fetch('/api/stats/peak-hours');
+    const data = await res.json();
+
+    if (!data.length) {
+        document.getElementById('chart').style.display    = 'none';
+        document.getElementById('no-data').style.display  = 'block';
+        return;
+    }
+
+    new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.hour),
+            datasets: [{
+                label: 'Espera promedio (minutos)',
+                data: data.map(d => d.avg_wait_minutes),
+                backgroundColor: '#a8d5b5',
+                borderColor: '#2d5a3d',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Minutos' },
+                    grid: { color: '#eef2ee' }
+                },
+                x: {
+                    grid: { display: false }
+                }
             }
-        });
+        }
     });
+}
+
+loadChart();
 </script>
 {% endblock %}
